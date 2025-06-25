@@ -1,509 +1,406 @@
-//script.js
-document.addEventListener("DOMContentLoaded",
-    function () {
-        populateClasses();
-        showStudentsList();
-    });
+// Clear old data and initialize fresh structure
+//localStorage.clear();
 
-function showAddStudentForm() {
-    document.getElementById('addStudentPopup').
-        style.display = 'block';
-}
-
-function showAddClassForm() {
-    // Show the add class popup
-    document.getElementById('addClassPopup').
-        style.display = 'block';
-}
-
-function addStudent() {
-    // Get input values
-    const newStudentName = document.
-        getElementById('newStudentName').value;
-    const newStudentRoll = document.
-        getElementById('newStudentRoll').value;
-
-    if (!newStudentName || !newStudentRoll) {
-        alert("Please provide both name and roll number.");
-        return;
-    }
-
-    // Add the new student to the list
-    const classSelector = document.
-        getElementById('classSelector');
-    const selectedClass = classSelector.
-        options[classSelector.selectedIndex].value;
-    const studentsList = document.
-        getElementById('studentsList');
-
-    const listItem = document.createElement('li');
-    listItem.setAttribute('data-roll-number', newStudentRoll);
-    listItem.innerHTML =
-        `<strong>
-            ${newStudentName}
-        </strong> 
-        (Roll No. ${newStudentRoll})`;
-
-    const absentButton =
-        createButton('A', 'absent',
-            () => markAttendance('absent', listItem, selectedClass));
-    const presentButton =
-        createButton('P', 'present',
-            () => markAttendance('present', listItem, selectedClass));
-    const leaveButton =
-        createButton('L', 'leave',
-            () => markAttendance('leave', listItem, selectedClass));
-
-    listItem.appendChild(absentButton);
-    listItem.appendChild(presentButton);
-    listItem.appendChild(leaveButton);
-
-    studentsList.appendChild(listItem);
-    saveStudentsList(selectedClass);
-    closePopup();
-}
-
-function addClass() {
-    const newClassName = document.
-        getElementById('newClassName').value;
-
-    if (!newClassName) {
-        alert("Please provide a class name.");
-        return;
-    }
-
-    // Add the new class to the class selector
-    const classSelector = document.
-        getElementById('classSelector');
-    const newClassOption = document.
-        createElement('option');
-    newClassOption.value = newClassName;
-    newClassOption.text = newClassName;
-    classSelector.add(newClassOption);
-    saveClasses();
-    closePopup();
-}
-
-function submitAttendance() {
-    const classSelector = document.
-        getElementById('classSelector');
-
-    if (!classSelector || !classSelector.options ||
-        classSelector.selectedIndex === -1) {
-        console.error
-            ('Class selector is not properly defined or has no options.');
-        return;
-    }
-
-    const selectedClass = classSelector.
-        options[classSelector.selectedIndex].value;
-
-    if (!selectedClass) {
-        console.error('Selected class is not valid.');
-        return;
-    }
-
-    const studentsList =
-        document.getElementById('studentsList');
-
-    // Check if attendance is already submitted 
-    // for the selected class
-    const isAttendanceSubmitted =
-        isAttendanceSubmittedForClass(selectedClass);
-
-    if (isAttendanceSubmitted) {
-        // If attendance is submitted, hide the 
-        // summary and show the attendance result
-        document.getElementById('summarySection').
-            style.display = 'none';
-        showAttendanceResult(selectedClass);
-    } else {
-        // If attendance is not submitted, show the summary
-        document.getElementById('summarySection').
-            style.display = 'block';
-        document.getElementById('resultSection').
-            style.display = 'none';
-    }
-    // Clear the student list and reset the form
-    studentsList.innerHTML = '';
-}
-
-function isAttendanceSubmittedForClass(selectedClass) {
-    const savedAttendanceData = JSON.parse
-        (localStorage.getItem('attendanceData')) || [];
-    return savedAttendanceData.some
-        (record => record.class === selectedClass);
-}
-
-function showAttendanceResult(selectedClass) {
-    const resultSection = document.
-        getElementById('resultSection');
-
-    if (!resultSection) {
-        console.error('Result section is not properly defined.');
-        return;
-    }
-
-    const now = new Date();
-    const date =
-        `${now.getFullYear()}-${String(now.getMonth() + 1).
-        padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    const time =
-        `${String(now.getHours()).padStart(2, '0')}:
-        ${String(now.getMinutes()).padStart(2, '0')}:
-        ${String(now.getSeconds()).padStart(2, '0')}`;
-
-    // Retrieve attendance data from local storage
-    const savedAttendanceData = JSON.parse
-        (localStorage.getItem('attendanceData')) || [];
-    const filteredAttendanceData = savedAttendanceData.
-        filter(record => record.class === selectedClass);
-
-    const totalStudents = filteredAttendanceData.
-    reduce((acc, record) => {
-        if (!acc.includes(record.name)) {
-            acc.push(record.name);
-        }
-        return acc;
-    }, []).length;
-
-    const totalPresent = filteredAttendanceData.
-        filter(record => record.status === 'present').length;
-    const totalAbsent = filteredAttendanceData.
-        filter(record => record.status === 'absent').length;
-    const totalLeave = filteredAttendanceData.
-        filter(record => record.status === 'leave').length;
-
-    // Update the result section
-    document.getElementById('attendanceDate').
-        innerText = date;
-    document.getElementById('attendanceTime').
-        innerText = time;
-    document.getElementById('attendanceClass').
-        innerText = selectedClass;
-    document.getElementById('attendanceTotalStudents').
-        innerText = totalStudents;
-    document.getElementById('attendancePresent').
-        innerText = totalPresent;
-    document.getElementById('attendanceAbsent').
-        innerText = totalAbsent;
-    document.getElementById('attendanceLeave').
-        innerText = totalLeave;
-
-    // Show the attendance result section
-    resultSection.style.display = 'block';
-}
-
-function closePopup() {
-    // Close the currently open popup
-    document.getElementById('addStudentPopup').
-        style.display = 'none';
-    document.getElementById('addClassPopup').
-        style.display = 'none';
-}
-
-function createButton(text, status, onClick) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.innerText = text;
-    button.className = status;
-    button.onclick = onClick;
-    return button;
-}
-
-function populateClasses() {
-    // Retrieve classes from local storage
-    const savedClasses = JSON.parse
-        (localStorage.getItem('classes')) || [];
-    const classSelector = 
-        document.getElementById('classSelector');
-
-    savedClasses.forEach(className => {
-        const newClassOption = 
-            document.createElement('option');
-        newClassOption.value = className;
-        newClassOption.text = className;
-        classSelector.add(newClassOption);
-    });
-}
-
-function showStudentsList() {
-    const classSelector = 
-        document.getElementById('classSelector');
-    const selectedClass = classSelector.
-        options[classSelector.selectedIndex].value;
-
-    const studentsList = 
-        document.getElementById('studentsList');
-    studentsList.innerHTML = '';
-
-    // Retrieve students from local storage
-    const savedStudents = JSON.parse
-        (localStorage.getItem('students')) || {};
-    const selectedClassStudents = 
-        savedStudents[selectedClass] || [];
-
-    selectedClassStudents.forEach(student => {
-        const listItem = document.createElement('li');
-        listItem.setAttribute
-            ('data-roll-number', student.rollNumber);
-        listItem.innerHTML = 
-            `<strong>
-                ${student.name}
-            </strong> 
-            (Roll No. ${student.rollNumber})`;
-
-        const absentButton = createButton('A', 'absent', 
-            () => markAttendance('absent', listItem, selectedClass));
-        const presentButton = createButton('P', 'present', 
-            () => markAttendance('present', listItem, selectedClass));
-        const leaveButton = createButton('L', 'leave', 
-            () => markAttendance('leave', listItem, selectedClass));
-
-        const savedColor = getSavedColor
-            (selectedClass, student.rollNumber);
-        if (savedColor) {
-            listItem.style.backgroundColor = savedColor;
-        }
-
-        listItem.appendChild(absentButton);
-        listItem.appendChild(presentButton);
-        listItem.appendChild(leaveButton);
-
-        studentsList.appendChild(listItem);
-    });
-
-    // Check if attendance for the 
-    // selected class has been submitted
-    const resultSection = document.
-        getElementById('resultSection');
-    const isAttendanceSubmitted = 
-        resultSection.style.display === 'block';
-
-    // Show the appropriate section based 
-    // on the attendance submission status
-    if (isAttendanceSubmitted) {
-        // Attendance has been submitted, 
-        // show the attendance result
-        showAttendanceResult(selectedClass);
-    } else {
-        // Attendance not submitted, 
-        // show the normal summary
-        showSummary(selectedClass);
-    }
-}
-
-function showAttendanceResult(selectedClass) {
-    const resultSection = 
-        document.getElementById('resultSection');
-
-    if (!resultSection) {
-        console.error('Result section is not properly defined.');
-        return;
-    }
-
-    const now = new Date();
-    const date = 
-        `${now.getFullYear()}-${String(now.getMonth() + 1).
-        padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    const time = 
-        `${String(now.getHours()).padStart(2, '0')}:
-        ${String(now.getMinutes()).padStart(2, '0')}:
-        ${String(now.getSeconds()).padStart(2, '0')}`;
-
-    // Retrieve attendance data from local storage
-    const savedAttendanceData = JSON.parse
-        (localStorage.getItem('attendanceData')) || [];
-    const filteredAttendanceData = savedAttendanceData.
-        filter(record => record.class === selectedClass);
-
-    const totalStudents = filteredAttendanceData.
-    reduce((acc, record) => {
-        if (!acc.includes(record.name)) {
-            acc.push(record.name);
-        }
-        return acc;
-    }, []).length;
-
-    const totalPresent = filteredAttendanceData.
-        filter(record => record.status === 'present').length;
-    const totalAbsent = filteredAttendanceData.
-        filter(record => record.status === 'absent').length;
-    const totalLeave = filteredAttendanceData.
-        filter(record => record.status === 'leave').length;
-
-    // Update the result section
-    const resultContent = 
-        `Date: ${date} | Time: ${time} | 
-        Total Students: ${totalStudents} | 
-        Present: ${totalPresent} | 
-        Absent: ${totalAbsent} | Leave: ${totalLeave}`;
-    resultSection.innerHTML = resultContent;
-
-    // Show the result section
-    resultSection.style.display = 'block';
-
-    // Show the list of students below the result section
-    const studentsListHTML = 
-        generateStudentsListHTML(filteredAttendanceData);
-    resultSection.insertAdjacentHTML
-        ('afterend', studentsListHTML);
-}
+// Initialize fresh data structures
+//if (!localStorage.getItem('classes')) {
+  //  localStorage.setItem('classes', JSON.stringify([]));
+//}
+//if (!localStorage.getItem('courses')) {
+  //  localStorage.setItem('courses', JSON.stringify([]));
+//}
+//if (!localStorage.getItem('students')) {
+  //  localStorage.setItem('students', JSON.stringify({}));
+//}
+//if (!localStorage.getItem('attendanceData')) {
+  //  localStorage.setItem('attendanceData', JSON.stringify([]));
+//}
 
 
-function markAttendance
-    (status, listItem, selectedClass) {
-    // Find the corresponding student name
-    const studentName = listItem.
-        querySelector('strong').innerText;
+// Initialize data structures
+        document.addEventListener("DOMContentLoaded", function() {
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('attendanceDate').value = today;
+            
+            // Initialize data if not exists
+            if (!localStorage.getItem('classes')) {
+                localStorage.setItem('classes', JSON.stringify([]));
+            }
+            if (!localStorage.getItem('courses')) {
+                localStorage.setItem('courses', JSON.stringify([]));
+            }
+            if (!localStorage.getItem('students')) {
+                localStorage.setItem('students', JSON.stringify({}));
+            }
+            if (!localStorage.getItem('attendanceData')) {
+                localStorage.setItem('attendanceData', JSON.stringify([]));
+            }
+            
+            // Populate dropdowns
+            populateClasses();
+            updateCourseOptions();
+        });
 
-    // Update the background color of the student 
-    // row based on the attendance status
-    listItem.style.backgroundColor = 
-        getStatusColor(status);
-
-    // Save the background color to local storage
-    saveColor(selectedClass, 
-        listItem.getAttribute('data-roll-number'), 
-        getStatusColor(status));
-
-    // Update the attendance record for the specific student
-    updateAttendanceRecord(studentName, selectedClass, status);
-
-    // Show the summary for the selected class
-    showSummary(selectedClass);
-}
-
-function getStatusColor(status) {
-    switch (status) {
-        case 'absent':
-            return '#e74c3c';
-        case 'present':
-            return '#2ecc71';
-        case 'leave':
-            return '#f39c12';
-        default:
-            return '';
-    }
-}
-
-function updateAttendanceRecord
-    (studentName, selectedClass, status) {
-    // Retrieve existing attendance data from local storage
-    const savedAttendanceData = JSON.parse
-        (localStorage.getItem('attendanceData')) || [];
-
-    // Check if the record already exists
-    const existingRecordIndex = savedAttendanceData.
-        findIndex(record => record.name === studentName && 
-            record.class === selectedClass);
-
-    if (existingRecordIndex !== -1) {
-        // Update the existing record
-        savedAttendanceData[existingRecordIndex].
-            status = status;
-        savedAttendanceData[existingRecordIndex].
-            date = getCurrentDate();
-    } else {
-        // Add a new record
-        savedAttendanceData.push(
-            { 
-                name: studentName, class: selectedClass, 
-                status: status, date: getCurrentDate() 
+        // Data management functions
+        function populateClasses() {
+            const classSelector = document.getElementById('classSelector');
+            const courseClassSelector = document.getElementById('courseClass');
+            
+            classSelector.innerHTML = '<option value="" disabled selected>Select Class</option>';
+            courseClassSelector.innerHTML = '<option value="" disabled selected>Select Class</option>';
+            
+            const classes = JSON.parse(localStorage.getItem('classes')) || [];
+            classes.forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls.name;
+                option.textContent = cls.name;
+                classSelector.appendChild(option.cloneNode(true));
+                courseClassSelector.appendChild(option.cloneNode(true));
             });
-    }
-
-    // Save updated attendance data to local storage
-    localStorage.setItem('attendanceData', 
-        JSON.stringify(savedAttendanceData));
-}
-
-function showSummary(selectedClass) {
-    const savedAttendanceData = JSON.parse
-        (localStorage.getItem('attendanceData')) || [];
-
-    // Filter attendance data based on the selected class
-    const filteredAttendanceData = savedAttendanceData.
-        filter(record => record.class === selectedClass);
-
-    const totalStudents = filteredAttendanceData.
-    reduce((acc, record) => {
-        if (!acc.includes(record.name)) {
-            acc.push(record.name);
         }
-        return acc;
-    }, []).length;
 
-    const totalPresent = filteredAttendanceData.
-        filter(record => record.status === 'present').length;
-    const totalAbsent = filteredAttendanceData.
-        filter(record => record.status === 'absent').length;
-    const totalLeave = filteredAttendanceData.
-        filter(record => record.status === 'leave').length;
+        function updateCourseOptions() {
+            const classSelector = document.getElementById('classSelector');
+            const courseSelector = document.getElementById('courseSelector');
+            const selectedClass = classSelector.value;
+            
+            courseSelector.innerHTML = '<option value="" disabled selected>Select Course</option>';
+            
+            if (!selectedClass) return;
+            
+            const courses = JSON.parse(localStorage.getItem('courses')) || [];
+            const classCourses = courses.filter(course => course.class === selectedClass);
+            
+            classCourses.forEach(course => {
+                const option = document.createElement('option');
+                option.value = course.code;
+                option.textContent = `${course.name} (${course.code})`;
+                courseSelector.appendChild(option);
+            });
+            
+            updateSectionOptions();
+        }
 
-    document.getElementById('totalStudents').
-        innerText = totalStudents;
-    document.getElementById('totalPresent').
-        innerText = totalPresent;
-    document.getElementById('totalAbsent').
-        innerText = totalAbsent;
-    document.getElementById('totalLeave').
-        innerText = totalLeave;
-}
+        function updateSectionOptions() {
+            // Sections are fixed as A and B, so we just enable the selector
+            const sectionSelector = document.getElementById('sectionSelector');
+            sectionSelector.disabled = !document.getElementById('courseSelector').value;
+            
+            showStudentsList();
+        }
 
-function getCurrentDate() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).
-        padStart(2, '0');
-    const day = String(now.getDate()).
-        padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
+        function showStudentsList() {
+            const courseSelector = document.getElementById('courseSelector');
+            const sectionSelector = document.getElementById('sectionSelector');
+            const selectedCourse = courseSelector.value;
+            const selectedSection = sectionSelector.value;
+            const attendanceDate = document.getElementById('attendanceDate').value;
+            
+            const studentsList = document.getElementById('studentsList');
+            studentsList.innerHTML = '';
+            
+            if (!selectedCourse || !selectedSection) return;
+            
+            // Get students for this course-section combination
+            const students = JSON.parse(localStorage.getItem('students')) || {};
+            const studentKey = `${selectedCourse}-${selectedSection}`;
+            const courseStudents = students[studentKey] || [];
+            
+            // Get attendance data for this course-section and date
+            const attendanceData = JSON.parse(localStorage.getItem('attendanceData')) || [];
+            const dateAttendance = attendanceData.filter(record => 
+                record.course === selectedCourse && 
+                record.section === selectedSection &&
+                record.date === attendanceDate
+            );
+            
+            courseStudents.forEach(student => {
+                const li = document.createElement('li');
+                li.setAttribute('data-roll-number', student.rollNumber);
+                li.innerHTML = `<strong>${student.name}</strong> (Roll No. ${student.rollNumber})`;
+                
+                // Check attendance status
+                const studentAttendance = dateAttendance.find(a => a.rollNumber === student.rollNumber);
+                if (studentAttendance) {
+                    li.style.backgroundColor = getStatusColor(studentAttendance.status);
+                }
+                
+                // Add attendance buttons
+                const div = document.createElement('div');
+                div.className = 'student-attendance-options';
+                div.appendChild(createButton('P', 'present', () => markAttendance('present', li, selectedCourse, selectedSection)));
+                div.appendChild(createButton('A', 'absent', () => markAttendance('absent', li, selectedCourse, selectedSection)));
+                div.appendChild(createButton('L', 'leave', () => markAttendance('leave', li, selectedCourse, selectedSection)));
+                
+                li.appendChild(div);
+                studentsList.appendChild(li);
+            });
+            
+            showSummary(selectedCourse, selectedSection, attendanceDate);
+        }
 
-function saveClasses() {
-    // Save classes to local storage
-    const classSelector = document.
-        getElementById('classSelector');
-    const savedClasses = Array.from(classSelector.options).
-        map(option => option.value);
-    localStorage.setItem('classes', 
-        JSON.stringify(savedClasses));
-}
+        // Attendance functions
+        function markAttendance(status, listItem, course, section) {
+            listItem.style.backgroundColor = getStatusColor(status);
+            
+            const rollNumber = listItem.getAttribute('data-roll-number');
+            const studentName = listItem.querySelector('strong').textContent;
+            const date = document.getElementById('attendanceDate').value;
+            const classSelector = document.getElementById('classSelector');
+            const className = classSelector.options[classSelector.selectedIndex].text;
+            
+            saveAttendanceRecord(studentName, rollNumber, className, course, section, status, date);
+            showSummary(course, section, date);
+        }
 
-function saveStudentsList(selectedClass) {
-    // Save the updated student list to local storage
-    const studentsList = document.
-        getElementById('studentsList');
-    const savedStudents = JSON.parse
-        (localStorage.getItem('students')) || {};
-    const selectedClassStudents = Array.from(studentsList.children).
-    map(item => {
-        return {
-            name: item.querySelector('strong').innerText,
-            rollNumber: item.getAttribute('data-roll-number')
-        };
-    });
+        function getStatusColor(status) {
+            switch (status) {
+                case 'present': return 'rgb(46, 204, 113)';
+                case 'absent': return 'rgb(231, 76, 60)';
+                case 'leave': return 'rgb(243, 156, 18)';
+                default: return '';
+            }
+        }
 
-    savedStudents[selectedClass] = selectedClassStudents;
-    localStorage.setItem
-        ('students', JSON.stringify(savedStudents));
-}
+        function saveAttendanceRecord(name, rollNumber, className, course, section, status, date) {
+            const attendanceData = JSON.parse(localStorage.getItem('attendanceData')) || [];
+            
+            // Check if record exists
+            const existingIndex = attendanceData.findIndex(record => 
+                record.rollNumber === rollNumber && 
+                record.course === course && 
+                record.section === section &&
+                record.date === date
+            );
+            
+            if (existingIndex >= 0) {
+                attendanceData[existingIndex].status = status;
+            } else {
+                attendanceData.push({
+                    name,
+                    rollNumber,
+                    class: className,
+                    course,
+                    section,
+                    status,
+                    date
+                });
+            }
+            
+            localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
+        }
 
-function saveColor(selectedClass, rollNumber, color) {
-    const savedColors = JSON.parse
-    (localStorage.getItem('colors')) || {};
-    if (!savedColors[selectedClass]) {
-        savedColors[selectedClass] = {};
-    }
-    savedColors[selectedClass][rollNumber] = color;
-    localStorage.setItem('colors', 
-        JSON.stringify(savedColors));
-}
+        function showSummary(course, section, date) {
+            const attendanceData = JSON.parse(localStorage.getItem('attendanceData')) || [];
+            const courseAttendance = attendanceData.filter(record => 
+                record.course === course && 
+                record.section === section &&
+                record.date === date
+            );
+            
+            const students = JSON.parse(localStorage.getItem('students')) || {};
+            const studentKey = `${course}-${section}`;
+            const totalStudents = students[studentKey] ? students[studentKey].length : 0;
+            const totalPresent = courseAttendance.filter(a => a.status === 'present').length;
+            const totalAbsent = courseAttendance.filter(a => a.status === 'absent').length;
+            const totalLeave = courseAttendance.filter(a => a.status === 'leave').length;
+            
+            document.getElementById('totalStudents').textContent = totalStudents;
+            document.getElementById('totalPresent').textContent = totalPresent;
+            document.getElementById('totalAbsent').textContent = totalAbsent;
+            document.getElementById('totalLeave').textContent = totalLeave;
+        }
 
-function getSavedColor(selectedClass, rollNumber) {
-    const savedColors = JSON.parse
-        (localStorage.getItem('colors')) || {};
-    return savedColors[selectedClass] ? 
-        savedColors[selectedClass][rollNumber] : null;
-}
+        function submitAttendance() {
+            const classSelector = document.getElementById('classSelector');
+            const courseSelector = document.getElementById('courseSelector');
+            const sectionSelector = document.getElementById('sectionSelector');
+            const className = classSelector.options[classSelector.selectedIndex].text;
+            const course = courseSelector.value;
+            const section = sectionSelector.value;
+            const date = document.getElementById('attendanceDate').value;
+            
+            if (!className || !course || !section || !date) {
+                alert("Please fill all required fields");
+                return;
+            }
+            
+            // Show result
+            const resultSection = document.getElementById('resultSection');
+            const summarySection = document.getElementById('summarySection');
+            
+            document.getElementById('resultDate').textContent = date;
+            document.getElementById('resultClass').textContent = className;
+            document.getElementById('resultCourse').textContent = 
+                courseSelector.options[courseSelector.selectedIndex].text;
+            document.getElementById('resultSectionName').textContent = section;
+            document.getElementById('resultTotalStudents').textContent = 
+                document.getElementById('totalStudents').textContent;
+            document.getElementById('resultPresent').textContent = 
+                document.getElementById('totalPresent').textContent;
+            document.getElementById('resultAbsent').textContent = 
+                document.getElementById('totalAbsent').textContent;
+            document.getElementById('resultLeave').textContent = 
+                document.getElementById('totalLeave').textContent;
+            
+            resultSection.style.display = 'block';
+            summarySection.style.display = 'none';
+        }
+
+        // Add new items functions
+        function addStudentsByRange() {
+            const startRoll = parseInt(document.getElementById('startRoll').value);
+            const endRoll = parseInt(document.getElementById('endRoll').value);
+            const prefix = document.getElementById('studentPrefix').value || '';
+            
+            if (isNaN(startRoll) || isNaN(endRoll) || startRoll > endRoll) {
+                alert("Please enter valid roll numbers");
+                return;
+            }
+            
+            const courseSelector = document.getElementById('courseSelector');
+            const sectionSelector = document.getElementById('sectionSelector');
+            const course = courseSelector.value;
+            const section = sectionSelector.value;
+            
+            if (!course || !section) {
+                alert("Please select a course and section first");
+                return;
+            }
+            
+            const students = JSON.parse(localStorage.getItem('students')) || {};
+            const studentKey = `${course}-${section}`;
+            students[studentKey] = [];
+            
+            const studentsList = document.getElementById('studentsList');
+            studentsList.innerHTML = '';
+            
+            for (let i = startRoll; i <= endRoll; i++) {
+                const rollNumber = prefix + i;
+                const studentName = `Student ${rollNumber}`;
+                
+                students[studentKey].push({
+                    name: studentName,
+                    rollNumber: rollNumber
+                });
+                
+                const li = document.createElement('li');
+                li.setAttribute('data-roll-number', rollNumber);
+                li.innerHTML = `<strong>${studentName}</strong> (Roll No. ${rollNumber})`;
+                
+                const div = document.createElement('div');
+                div.className = 'student-attendance-options';
+                div.appendChild(createButton('P', 'present', () => markAttendance('present', li, course, section)));
+                div.appendChild(createButton('A', 'absent', () => markAttendance('absent', li, course, section)));
+                div.appendChild(createButton('L', 'leave', () => markAttendance('leave', li, course, section)));
+                
+                li.appendChild(div);
+                studentsList.appendChild(li);
+            }
+            
+            localStorage.setItem('students', JSON.stringify(students));
+            closePopup();
+            showSummary(course, section, document.getElementById('attendanceDate').value);
+        }
+
+        function addClass() {
+            const className = document.getElementById('newClassName').value.trim();
+            
+            if (!className) {
+                alert("Please enter a class name");
+                return;
+            }
+            
+            const classes = JSON.parse(localStorage.getItem('classes')) || [];
+            
+            // Check if class already exists
+            if (classes.some(cls => cls.name === className)) {
+                alert("This class already exists");
+                return;
+            }
+            
+            classes.push({
+                name: className
+            });
+            
+            localStorage.setItem('classes', JSON.stringify(classes));
+            closePopup();
+            populateClasses();
+        }
+
+        function addCourse() {
+            const name = document.getElementById('newCourseName').value.trim();
+            const code = document.getElementById('newCourseCode').value.trim();
+            const className = document.getElementById('courseClass').value;
+            
+            if (!name || !code || !className) {
+                alert("Please fill all fields");
+                return;
+            }
+            
+            const courses = JSON.parse(localStorage.getItem('courses')) || [];
+            
+            // Check if course code already exists
+            if (courses.some(course => course.code === code)) {
+                alert("A course with this code already exists");
+                return;
+            }
+            
+            courses.push({
+                name: name,
+                code: code,
+                class: className
+            });
+            
+            localStorage.setItem('courses', JSON.stringify(courses));
+            closePopup();
+            updateCourseOptions();
+        }
+
+        // Helper functions
+        function createButton(text, className, onClick) {
+            const button = document.createElement('button');
+            button.textContent = text;
+            button.className = className;
+            button.onclick = onClick;
+            return button;
+        }
+
+        function showAddStudentsForm() {
+            document.getElementById('addStudentsPopup').style.display = 'block';
+        }
+
+        function showAddClassForm() {
+            document.getElementById('addClassPopup').style.display = 'block';
+        }
+
+        function showAddCourseForm() {
+            // Populate class dropdown in course form
+            const courseClassSelector = document.getElementById('courseClass');
+            courseClassSelector.innerHTML = '<option value="" disabled selected>Select Class</option>';
+            
+            const classes = JSON.parse(localStorage.getItem('classes')) || [];
+            classes.forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls.name;
+                option.textContent = cls.name;
+                courseClassSelector.appendChild(option);
+            });
+            
+            document.getElementById('addCoursePopup').style.display = 'block';
+        }
+
+        function closePopup() {
+            document.querySelectorAll('.popup').forEach(popup => {
+                popup.style.display = 'none';
+            });
+        }
+
+        // Add event listener for date change
+        document.getElementById('attendanceDate').addEventListener('change', function() {
+            const courseSelector = document.getElementById('courseSelector');
+            const sectionSelector = document.getElementById('sectionSelector');
+            if (courseSelector.value && sectionSelector.value) {
+                showStudentsList();
+            }
+        });
