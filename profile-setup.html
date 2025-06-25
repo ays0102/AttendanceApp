@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile-setup</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="profile-setup.css">
+    <link rel="stylesheet" href="signin.css">
+    <link rel="stylesheet" href="signup.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+
+<body>
+    <!-- Profile Setup Flow (shown after registration) -->
+    <div id="profile-setup">
+        <div class="container">
+            <div class="profile-setup-container">
+                <h2 class="text-center">Complete Your Profile</h2>
+                <p class="text-center mb-20">Help us personalize your experience</p>
+                
+                <div class="profile-completion">
+                    <div class="flex justify-between items-center">
+                        <span>Profile Completion</span>
+                        <span id="completion-percentage">0%</span>
+                    </div>
+                    <div class="profile-completion-bar">
+                        <div class="profile-completion-progress" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="profile-setup-steps">
+                    <div class="step active" id="step1-indicator">
+                        <div class="step-number">1</div>
+                        <div>Basic Info</div>
+                    </div>
+                    <div class="step" id="step2-indicator">
+                        <div class="step-number">2</div>
+                        <div>Academic Details</div>
+                    </div>
+                    <div class="step" id="step3-indicator">
+                        <div class="step-number">3</div>
+                        <div>Courses</div>
+                    </div>
+                </div>
+                
+                <!-- Step 1: Basic Information -->
+                <div class="profile-form-section active" id="step1">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="profile-name" placeholder="Your full name">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="profile-phone" placeholder="+1 (123) 456-7890">
+                    </div>
+                    <div class="form-group">
+                        <label>Profile Photo URL</label>
+                        <input type="url" id="profile-photo" placeholder="https://example.com/photo.jpg">
+                        <small class="text-muted">Leave blank to use initials</small>
+                    </div>
+                    
+                    <div class="form-navigation">
+                        <button class="btn-secondary" disabled><i class="fas fa-arrow-left"></i> Back</button>
+                        <button class="btn" id="next-to-step2"><i class="fas fa-arrow-right"></i> Continue</button>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Academic Details -->
+                <div class="profile-form-section" id="step2">
+                    <div class="form-group">
+                        <label>Department</label>
+                        <select id="profile-dept">
+                            <option value="">Select your department</option>
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Electrical Engineering">Electrical Engineering</option>
+                            <option value="Mechanical Engineering">Mechanical Engineering</option>
+                            <option value="Business Administration">Business Administration</option>
+                            <option value="Mathematics">Mathematics</option>
+                        </select>
+                    </div>
+
+
+                    
+                    <div class="role-field-group">
+                        <div class="form-group hidden" id="faculty-fields">
+                            <label>Faculty Position</label>
+                            <select id="profile-position">
+                                <option value="">Select your position</option>
+                                <option value="professor">Professor</option>
+                                <option value="associate-professor">Associate Professor</option>
+                                <option value="assistant-professor">Assistant Professor</option>
+                                <option value="lecturer">Lecturer</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Current Level</label>
+                        <select id="profile-level">
+                            <option value="">Select current level</option>
+                            <option value="Level 1">Level 1</option>
+                            <option value="Level 2">Level 2</option>
+                            <option value="Level 3">Level 3</option>
+                            <option value="Level 4">Level 4</option>
+                        </select>
+                        <label>Current Term</label>
+                        <select id="profile-term">
+                            <option value="">Select current term</option>
+                            <option value="term 1">Term 1</option>
+                            <option value="term 2">Term 2</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-navigation">
+                        <button class="btn-secondary" id="back-to-step1"><i class="fas fa-arrow-left"></i> Back</button>
+                        <button class="btn" id="next-to-step3"><i class="fas fa-arrow-right"></i> Continue</button>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Course Selection -->
+                <div class="profile-form-section" id="step3">
+                    <div class="form-group">
+                        <label id="course-selection-label">Select Your Courses</label>
+                        <div id="course-selection">
+                            <!-- Courses will be populated based on role -->
+                        </div>
+                    </div>
+                    
+                    <div class="form-navigation">
+                        <button class="btn-secondary" id="back-to-step2"><i class="fas fa-arrow-left"></i> Back</button>
+                        <button class="btn" id="complete-profile"><i class="fas fa-check"></i> Complete Profile</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<script src="profile-setup.js"></script>
+</body>
+</html>
