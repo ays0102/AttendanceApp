@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CT Marks Portal</title>
+    <link rel="stylesheet" href="ct-marks.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+</head>
+
+<body>
+    <div class="navbar">
+        <div class="navbar-brand">
+            <h1>CT Marks Portal</h1>
+        </div>
+        <div class="navbar-links">
+            <p>
+                Academic Year: <span id="academicYear">2024</span>
+            </p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="formSection">
+            <h2>Enter CT Marks</h2>
+            
+            <button id="addCTButton" onclick="showAddCTForm()">
+                Create New CT
+            </button>
+            <button id="addStudentButton" onclick="showAddStudentForm()">
+                Add Student
+            </button>
+            <button id="addClassButton" onclick="showAddClassForm()">
+                Add Class
+            </button>
+
+            <div style="margin: 20px 0; display: flex; gap: 15px;">
+                <div style="flex: 1;">
+                    <label for="classSelector">Class:</label>
+                    <select id="classSelector" required onchange="loadCTsForClass()">
+                        <option value="">Select a Class</option>
+                    </select>
+                </div>
+                
+                <div style="flex: 1;">
+                    <label for="ctSelector">CT:</label>
+                    <select id="ctSelector" required onchange="showCTMarks()">
+                        <option value="">Select a CT</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="marksEntrySection" style="display: none;">
+                <h3 id="ctTitle">CT 1 Marks</h3>
+                <p id="ctDetails">Date: 2023-10-15 | Max Marks: 20</p>
+                
+                <table id="marksTable">
+                    <thead>
+                        <tr>
+                            <th>Roll No</th>
+                            <th>Student Name</th>
+                            <th>Marks Obtained</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="marksTableBody">
+                        <!-- Marks will be populated here -->
+                    </tbody>
+                </table>
+                
+                <button onclick="saveCTMarks()" style="margin-top: 15px;">
+                    Save CT Marks
+                </button>
+            </div>
+
+            <div id="summarySection" class="ct-summary" style="display: none;">
+                <h3>CT Summary</h3>
+                <div class="ct-summary-grid">
+                    <div class="ct-summary-item">
+                        <h4>Total Students</h4>
+                        <p id="summaryTotalStudents">0</p>
+                    </div>
+                    <div class="ct-summary-item">
+                        <h4>Average Marks</h4>
+                        <p id="summaryAverage">0.00</p>
+                    </div>
+                    <div class="ct-summary-item">
+                        <h4>Highest Marks</h4>
+                        <p id="summaryHighest">0</p>
+                    </div>
+                    <div class="ct-summary-item">
+                        <h4>Lowest Marks</h4>
+                        <p id="summaryLowest">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="allCTsSummary" style="margin-top: 30px; display: none;">
+                <h3>All CTs Summary for This Class</h3>
+                <table id="allCTsTable">
+                    <thead>
+                        <tr>
+                            <th>CT</th>
+                            <th>Date</th>
+                            <th>Max Marks</th>
+                            <th>Avg Marks</th>
+                            <th>Highest</th>
+                            <th>Lowest</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allCTsTableBody">
+                        <!-- All CTs summary will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Student Popup -->
+    <div id="addStudentPopup" class="popup">
+        <h2>Add Student</h2>
+        <label for="newStudentName">Student Name:</label>
+        <input type="text" id="newStudentName" required>
+        
+        <label for="newStudentRoll">Roll Number:</label>
+        <input type="text" id="newStudentRoll" required>
+        
+        <label for="newStudentClass">Class:</label>
+        <select id="newStudentClass" required>
+            <option value="">Select Class</option>
+        </select>
+
+        <div class="popup-buttons">
+            <button onclick="addStudent()">Submit</button>
+            <button onclick="closePopup()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Add Class Popup -->
+    <div id="addClassPopup" class="popup">
+        <h2>Add Class</h2>
+        <label for="newClassName">Class Name:</label>
+        <input type="text" id="newClassName" required>
+        
+        <label for="newClassSection">Section:</label>
+        <input type="text" id="newClassSection">
+        
+        <label for="newClassSubject">Subject:</label>
+        <input type="text" id="newClassSubject">
+
+        <div class="popup-buttons">
+            <button onclick="addClass()">Submit</button>
+            <button onclick="closePopup()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Add CT Popup -->
+    <div id="addCTPopup" class="popup">
+        <h2>Create New CT</h2>
+        <label for="newCTClass">Class:</label>
+        <select id="newCTClass" required onchange="updateMaxStudents()">
+            <option value="">Select Class</option>
+        </select>
+        
+        <label for="newCTName">CT Name/Number:</label>
+        <input type="text" id="newCTName" required>
+        
+        <label for="newCTDate">Date:</label>
+        <input type="date" id="newCTDate" required>
+        
+        <label for="newCTMaxMarks">Max Marks:</label>
+        <input type="number" id="newCTMaxMarks" min="1" value="20" required>
+        
+        <label for="newCTDescription">Description (Optional):</label>
+        <input type="text" id="newCTDescription">
+        
+        <p id="studentCountInfo">This class has 0 students.</p>
+
+        <div class="popup-buttons">
+            <button onclick="createNewCT()">Create CT</button>
+            <button onclick="closePopup()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Edit Marks Popup -->
+    <div id="editMarksPopup" class="popup">
+        <h2>Edit Marks</h2>
+        <p id="editStudentInfo">Student: John Doe (Roll: 101)</p>
+        
+        <label for="editMarksObtained">Marks Obtained:</label>
+        <input type="number" id="editMarksObtained" min="0" required>
+        
+        <div class="popup-buttons">
+            <button onclick="saveEditedMarks()">Save</button>
+            <button onclick="closePopup()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Overlay for popups -->
+    <div id="overlay" class="overlay"></div>
+
+    <script src="ct-marks.js"></script>
+</body>
+
+</html>
