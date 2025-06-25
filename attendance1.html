@@ -1,151 +1,115 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Attendance</title>
-    <link rel="stylesheet" href="main.css">
     <link rel="stylesheet" href="attendance1.css">
-    <style>
-        .popup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 20px;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-            z-index: 999;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
 <body>
-
     <div class="container">
         <div id="formSection">
             <h2>Mark Attendance</h2>
-            <button id="addStudentButton" 
-                onclick="showAddStudentForm()">
-                Add Student
-            </button>
-            <button id="addClassButton" 
-                onclick="showAddClassForm()">
-                Add Class
-            </button>
+            <button id="addStudentsButton" onclick="showAddStudentsForm()">Add Students by Range</button>
+            <button id="addClassButton" onclick="showAddClassForm()">Add Class</button>
+            <button id="addCourseButton" onclick="showAddCourseForm()">Add Course</button>
 
-            <label for="classSelector">Class:</label>
-            <select id="classSelector" required 
-                onchange="showStudentsList()">
-                <!-- Populate classes dynamically -->
-            </select>
+            <div class="date-picker">
+                <label for="attendanceDate">Date:</label>
+                <input type="date" id="attendanceDate" required>
+            </div>
 
-            <ul id="studentsList">
-                <!-- Populate students dynamically 
-                    based on the selected class -->
-            </ul>
+            <div class="form-group">
+                <div>
+                    <label for="classSelector">Class:</label>
+                    <select id="classSelector" required onchange="updateCourseOptions()">
+                        <option value="" disabled selected>Select Class</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="courseSelector">Course:</label>
+                    <select id="courseSelector" required onchange="updateSectionOptions()">
+                        <option value="" disabled selected>Select Course</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="sectionSelector">Section:</label>
+                    <select id="sectionSelector" required onchange="showStudentsList()">
+                        <option value="" disabled selected>Select Section</option>
+                        <option value="A">Section A</option>
+                        <option value="B">Section B</option>
+                    </select>
+                </div>
+            </div>
+
+            <ul id="studentsList"></ul>
 
             <div id="summarySection">
                 <h3>Summary</h3>
-                <p>
-                    Total Students: 
-                    <span id="totalStudents">0</span>
-                </p>
-                <p>
-                    Total Present: 
-                    <span id="totalPresent">0</span>
-                </p>
-                <p>
-                    Total Absent: 
-                    <span id="totalAbsent">0</span>
-                </p>
-                <p>
-                    Total Leave: 
-                    <span id="totalLeave">0</span>
-                </p>
+                <p>Total Students: <span id="totalStudents">0</span></p>
+                <p>Total Present: <span id="totalPresent">0</span></p>
+                <p>Total Absent: <span id="totalAbsent">0</span></p>
+                <p>Total Leave: <span id="totalLeave">0</span></p>
             </div>
 
-            <button onclick="submitAttendance()">
-                Submit Attendance
-            </button>
+            <button onclick="submitAttendance()">Submit Attendance</button>
 
-            <!-- Result Section -->
             <div id="resultSection" style="display: none;">
                 <h3>Attendance Result</h3>
-                <p>
-                    Date: 
-                    <span id="attendanceDate"></span>
-                </p>
-                <p>
-                    Time: 
-                    <span id="attendanceTime"></span>
-                </p>
-                <p>
-                    Class: 
-                    <span id="attendanceClass"></span>
-                </p>
-                <p>
-                    Total Students: 
-                    <span id="attendanceTotalStudents"></span>
-                </p>
-                <p>
-                    Present: 
-                    <span id="attendancePresent"></span>
-                </p>
-                <p>
-                    Absent: 
-                    <span id="attendanceAbsent"></span>
-                </p>
-                <p>
-                    Leave: 
-                    <span id="attendanceLeave"></span>
-                </p>
+                <p>Date: <span id="resultDate"></span></p>
+                <p>Class: <span id="resultClass"></span></p>
+                <p>Course: <span id="resultCourse"></span></p>
+                <p>Section: <span id="resultSectionName"></span></p>
+                <p>Total Students: <span id="resultTotalStudents"></span></p>
+                <p>Present: <span id="resultPresent"></span></p>
+                <p>Absent: <span id="resultAbsent"></span></p>
+                <p>Leave: <span id="resultLeave"></span></p>
             </div>
         </div>
     </div>
 
-    <div id="addStudentPopup" class="popup">
-        <h2>Add Student</h2>
-        <!-- Add Student Form Content -->
-        <label for="newStudentName">
-            Student Name:
-        </label>
-        <input type="text" id="newStudentName" required>
-        <label for="newStudentRoll">
-            Roll Number:
-        </label>
-        <input type="text" id="newStudentRoll" required>
-        <!-- Add more fields as needed -->
-
-        <button onclick="addStudent()">
-            submit
-        </button>
-        <button onclick="closePopup()">
-            Cancel
-        </button>
+    <!-- Popup Forms -->
+    <div id="addStudentsPopup" class="popup">
+        <h2>Add Students by Range</h2>
+        <label for="studentPrefix">Student ID Prefix (optional):</label>
+        <input type="text" id="studentPrefix" placeholder="e.g., STU-">
+        <div class="form-group">
+            <div>
+                <label for="startRoll">Start Roll No:</label>
+                <input type="number" id="startRoll" required min="1">
+            </div>
+            <div>
+                <label for="endRoll">End Roll No:</label>
+                <input type="number" id="endRoll" required min="1">
+            </div>
+        </div>
+        <button onclick="addStudentsByRange()">Add Students</button>
+        <button class="btn-secondary" onclick="closePopup()">Cancel</button>
     </div>
 
     <div id="addClassPopup" class="popup">
         <h2>Add Class</h2>
-        <!-- Add Class Form Content -->
-        <label for="newClassName">
-            Class Name:
-        </label>
+        <label for="newClassName">Class Name:</label>
         <input type="text" id="newClassName" required>
-        <!-- Add more fields as needed -->
+        <button onclick="addClass()">Submit</button>
+        <button class="btn-secondary" onclick="closePopup()">Cancel</button>
+    </div>
 
-        <button onclick="addClass()">
-            Submit
-        </button>
-        <button onclick="closePopup()">
-            Cancel
-        </button>
+    <div id="addCoursePopup" class="popup">
+        <h2>Add Course</h2>
+        <label for="newCourseName">Course Name:</label>
+        <input type="text" id="newCourseName" required>
+        <label for="newCourseCode">Course Code:</label>
+        <input type="text" id="newCourseCode" required>
+        <label for="courseClass">Class:</label>
+        <select id="courseClass" required>
+            <option value="" disabled selected>Select Class</option>
+        </select>
+        <button onclick="addCourse()">Submit</button>
+        <button class="btn-secondary" onclick="closePopup()">Cancel</button>
     </div>
 
     <script src="attendance1.js"></script>
 </body>
-
 </html>
